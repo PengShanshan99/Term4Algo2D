@@ -1,8 +1,11 @@
 package myPackage;
 
-import java.util.Iterator;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.io.IOException;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Scanner;
 // The CNF being handled is: 
 // '+' implies 'OR' and '*' implies 'AND' 
 // (x1+x2)*(x2¡¯+x3)*(x1¡¯+x2¡¯)*(x3+x4)*(x3¡¯+x5)* 
@@ -15,7 +18,7 @@ public class Kosaraju {
 	ArrayList<ArrayList<Integer>> input = new ArrayList<ArrayList<Integer>>();
 	//Boolean marked[] = new Boolean[variableNum];
 	//constructor
-	Kosaraju(int arg1, int arg2, ArrayList arg3){
+	Kosaraju(int arg1, int arg2, ArrayList<ArrayList<Integer>> arg3){
 		this.variableNum = arg1;
 		this.clauseNum = arg2;
 		this.input = arg3;
@@ -58,69 +61,74 @@ public class Kosaraju {
 	public void isSatisfiable() {
 		String SCC = this.genSCC();
 		String[] words = SCC.trim().split(" ");
-		for(String w:words){    
-			for(int i = 0; i < w.length() ; i++) { 
-			    char cFirst = w.charAt(i); 
-			    for(int i2 = i; i2 < w.length(); i2++) {
-			    	char cSecond = w.charAt(i2);
-			    	if (Character.getNumericValue(cFirst)+5==Character.getNumericValue(cSecond)||
-			    			Character.getNumericValue(cFirst)-5==Character.getNumericValue(cSecond)) {
-			    		System.out.println("not satisfiable");
-			    		return;
-			    	}
-			    }
+		for(int i = 0; i < words.length; i++){
+			String[] literals = words[i].split(",");
+			Integer[] literalsnum = new Integer[literals.length];
+			HashMap<Integer, Integer> myHash = new HashMap<Integer, Integer>();
+			for (int i1 = 0; i1 < literals.length; i1++) {
+				myHash.put(Integer.parseInt(literals[i1]), 0);
+				literalsnum[i1] = Integer.parseInt(literals[i1]);
+			}
+			for (int i2 = 0; i2 < literalsnum.length; i2++) {
+				if (myHash.containsKey(literalsnum[i2]+5)||myHash.containsKey(literalsnum[i2]-5)) {
+					System.out.println("FORMULA UNSATISFIABLE");
+					return;
+				}
 			}
 		}
-		System.out.println("satisfiable");
+		System.out.println("FORMULA SATISFIABLE");
 		return;
 	}
-	public static void main(String[] args) {
-		//(x1+x2)*(x2¡¯+x3)*(x1¡¯+x2¡¯)*(x3+x4)*(x3¡¯+x5)* 
-	    // (x4¡¯+x5¡¯)*(x3¡¯+x4) 
-		int n = 5;
-		int m = 7;
+	public static void main(String[] args) throws IOException{
 		
-		ArrayList<ArrayList<Integer>> outer = new ArrayList<ArrayList<Integer>>();
-	    ArrayList<Integer> inner = new ArrayList<Integer>();        
+		int n = 0;//number of variables
+		int m = 0;//number of clauses
+		Boolean startParsing = Boolean.FALSE;
+		ArrayList<ArrayList<Integer>> outer = new ArrayList<ArrayList<Integer>>();//list of clauses
+	    ArrayList<Integer> inner = new ArrayList<Integer>(2); //clauses
+	    
+	    //reading .cnf file
+	    String userDirectory = System.getProperty("user.dir");
+    	File file = new File(userDirectory+"\\sampleCNF\\debug.cnf");
+        Scanner input = new Scanner(file);
+        ArrayList<String> list = new ArrayList<String>();//each line is stored as an element of the list
+        while (input.hasNextLine()) {
+            list.add(input.nextLine());
+        }
+        input.close();
+        int numberOfLines = list.size();
+        
+        //store input in a list of list
+        for(int i=0; i<numberOfLines; i++){
+            if(list.get(i).length()>0){ //skip empty lines
+                char a = list.get(i).charAt(0); 
+                String preamble = Character.toString(a);
+                if(preamble.equals("p")){  //problem line
+                    String[] splitP = list.get(i).split("\\s+");
+                    //reading variable number info from problem line
+                    n = Integer.parseInt(splitP[2]);
+                    m = Integer.parseInt(splitP[3]);
+                    startParsing = Boolean.TRUE;
+                } else if (startParsing) {   //start parsing after problem line
+                    String tempString = list.get(i);
+                    tempString = tempString.trim();
+                    String[] temp = tempString.split("\\s+");
+                    for(String x:temp){
+                    	int currentLiteral = Integer.parseInt(x);
+                        if(currentLiteral != 0) {
+                            inner.add(currentLiteral);
+                        } else{
+                        	outer.add(inner);
+                        	inner = new ArrayList<Integer>(2); 
+                        }
+                    }
+                }
+            }
+        }
 
-	    inner.add(1);     
-	    inner.add(2);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>(); // create a new inner list that has the same content as  
-	                                           // the original inner list
-	    inner.add(-2);     
-	    inner.add(3);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>();
-	    
-	    inner.add(-1);     
-	    inner.add(-2);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>();
-	    
-	    inner.add(3);     
-	    inner.add(4);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>();
-	    
-	    inner.add(-3);     
-	    inner.add(5);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>();
-	    
-	    inner.add(-4);     
-	    inner.add(-5);
-	    outer.add(inner); // add first list
-	    inner = new ArrayList<Integer>();
-	    
-	    inner.add(-3);     
-	    inner.add(4);
-	    outer.add(inner); // add first list
-	    
-	    System.out.println(outer);
 	    Kosaraju k = new Kosaraju(n,m,outer);
 	    String SCC = k.genSCC();
-		//System.out.println(SCC);
+		System.out.println(SCC);
 		k.isSatisfiable();
 		
 		

@@ -33,6 +33,7 @@ class Graph
 		//output1.add(v);
 		//System.out.print(v + " ");
 		this.SCC+=v;
+		this.SCC+=",";
 		
 
 		int n; 
@@ -79,14 +80,14 @@ class Graph
 
 		// All vertices reachable from v are processed by now, 
 		// push v to Stack 
-		stack.push(new Integer(v)); 
+		stack.push(v); 
 	} 
 
 	// The main function that finds and prints all strongly 
 	// connected components 
 	String printSCCs() 
 	{ 
-		Stack stack = new Stack(); 
+		Stack<Integer> stack = new Stack<Integer>(); 
 
 		// Mark all the vertices as not visited (For first DFS) 
 		boolean visited[] = new boolean[V]; 
@@ -122,22 +123,7 @@ class Graph
 		}
 		return gr.SCC;
 	} 
-
-//	// Driver method 
-//	public static void main(String args[]) 
-//	{ 
-//		// Create a graph given in the above diagram 
-//		Graph g = new Graph(5); 
-//		g.addEdge(1, 0); 
-//		g.addEdge(0, 2); 
-//		g.addEdge(2, 1); 
-//		g.addEdge(0, 3); 
-//		g.addEdge(3, 4); 
-//
-//		System.out.println("Following are strongly connected components "+ 
-//						"in given graph "); 
-//		g.printSCCs(); 
-//	} 
+	
 } 
 //This code is contributed by Aakash Hasija 
 
