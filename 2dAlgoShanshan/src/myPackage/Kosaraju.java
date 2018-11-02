@@ -6,17 +6,16 @@ import java.io.IOException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Scanner;
-// The CNF being handled is: 
+// The example CNF being handled is: 
 // '+' implies 'OR' and '*' implies 'AND' 
-// (x1+x2)*(x2¡¯+x3)*(x1¡¯+x2¡¯)*(x3+x4)*(x3¡¯+x5)* 
-// (x4¡¯+x5¡¯)*(x3¡¯+x4) 
+// (x1+x2)*(x2â€™+x3)*(x1â€™+x2â€™)*(x3+x4)*(x3â€™+x5)* 
+// (x4â€™+x5â€™)*(x3â€™+x4) 
 // our input parameters would be a (1)list of list (2)#of variables (3)#of clauses
 //a = [[1,2],[-2,3],[-1,-2],[3,4],[-3,5],[-4,-5],[-3,4]]
 public class Kosaraju {
 	int variableNum = 0;//number of variables
 	int clauseNum = 0;
 	ArrayList<ArrayList<Integer>> input = new ArrayList<ArrayList<Integer>>();
-	//Boolean marked[] = new Boolean[variableNum];
 	//constructor
 	Kosaraju(int arg1, int arg2, ArrayList<ArrayList<Integer>> arg3){
 		this.variableNum = arg1;
@@ -77,6 +76,50 @@ public class Kosaraju {
 			}
 		}
 		System.out.println("FORMULA SATISFIABLE");
+		//print out variable assignment that makes the expression true
+		//make a pool of all literals we have
+		ArrayList<Integer> allLiteral = new ArrayList<Integer>();//need to change, use the SCC.
+		for (ArrayList<Integer> a :this.input) {
+			for (Integer l: a) {
+				allLiteral.add(l);
+			}
+		}
+		//tranverse the SCCs through reverse-topological sort order
+		for(int i = words.length-1; i >= 0; i--){
+			String[] literals = words[i].split(",");
+			// convert literals from string to integer, then delete the negation of the integer in the allLiteral list.
+			for (int i2 = 0; i2 < literals.length; i2++) {
+				int currentLiteral = (Integer.parseInt(literals[i2]));
+				int actualLiteral = 0;
+				if (currentLiteral >= this.variableNum) {//a negative literal
+					actualLiteral = (-1)*(currentLiteral + 1 - this.variableNum);
+				}else {//a positive literal
+					actualLiteral = currentLiteral + 1;
+				}
+				if (allLiteral.indexOf(actualLiteral) >= 0) {//remove its negation
+					while (allLiteral.indexOf(actualLiteral*(-1))>=0) {
+						allLiteral.remove(allLiteral.indexOf(actualLiteral*(-1)));
+					}
+				}
+			}
+		}
+		//make the output into "10010" format
+		String output = "";
+		ArrayList<Integer> truthAssignment = new ArrayList<Integer>();
+		for (int i = 0; i < this.variableNum; i++) {
+			truthAssignment.add(0);
+		}
+		for (int literal:allLiteral) {
+			if (literal>0) {
+				truthAssignment.set(literal-1, 1);
+			}else {
+				truthAssignment.set(literal*(-1)-1, 0);
+			}
+		}
+		for (int truth: truthAssignment) {
+			output += truth;
+		}
+		System.out.println(output);
 		return;
 	}
 	public static void main(String[] args) throws IOException{
@@ -127,11 +170,9 @@ public class Kosaraju {
         }
 
 	    Kosaraju k = new Kosaraju(n,m,outer);
-	    String SCC = k.genSCC();
-		System.out.println(SCC);
+//	    String SCC = k.genSCC();
+//		System.out.println(SCC);
 		k.isSatisfiable();
-		
-		
 	}
 
 }
